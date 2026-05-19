@@ -3,123 +3,268 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sistema comprometido</title>
+<title>Terminal Segura</title>
 
 <style>
-body{
-    background:black;
-    color:#00ff00;
-    font-family: monospace;
+html,body{
     margin:0;
+    padding:0;
+    background:#000;
     overflow:hidden;
+    font-family:Consolas, monospace;
+    color:#00ff66;
 }
 
-.terminal{
-    padding:20px;
-    white-space:pre-line;
-    font-size:18px;
-}
-
-.glitch{
-    font-size:32px;
-    color:red;
-    text-align:center;
-    margin-top:20px;
-    animation: blink 0.1s infinite;
-}
-
-@keyframes blink{
-    50%{opacity:0.3;}
-}
-
-.matrix{
+#matrix{
     position:fixed;
     top:0;
     left:0;
     width:100%;
     height:100%;
-    pointer-events:none;
-    opacity:0.15;
+    opacity:0.18;
+    z-index:0;
+}
+
+#overlay{
+    position:absolute;
+    inset:0;
+    background:radial-gradient(circle, transparent 40%, rgba(0,0,0,0.85));
+    z-index:1;
+}
+
+#terminal{
+    position:relative;
+    z-index:2;
+    padding:20px;
+    white-space:pre-line;
+    font-size:18px;
+    text-shadow:0 0 5px #00ff66;
+}
+
+.alerta{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    z-index:5;
+    color:red;
+    font-size:42px;
+    text-align:center;
+    font-weight:bold;
+    animation:parpadeo 0.08s infinite;
+    text-shadow:0 0 20px red;
+}
+
+.azul{
+    color:#00ffff;
+}
+
+.rojo{
+    color:#ff2222;
+}
+
+.aviso{
+    position:absolute;
+    bottom:20px;
+    left:20px;
+    z-index:3;
+    color:orange;
+    animation:pulso 1s infinite;
+}
+
+@keyframes parpadeo{
+    50%{
+        opacity:0.4;
+        transform:translate(-50%,-50%) scale(1.02);
+    }
+}
+
+@keyframes pulso{
+    50%{
+        opacity:0.3;
+    }
 }
 </style>
 </head>
+
 <body>
 
-<canvas class="matrix" id="matrix"></canvas>
+<canvas id="matrix"></canvas>
+<div id="overlay"></div>
 
-<div class="terminal" id="terminal"></div>
+<div id="terminal"></div>
+
+<div class="aviso">
+MONITOREANDO DISPOSITIVO...
+</div>
 
 <script>
-const lines = [
-"> Conectando al dispositivo...",
-"> Acceso autorizado...",
-"> Extrayendo datos...",
-"> Analizando galería...",
-"> Contraseñas encontradas...",
-"> Subiendo archivos...",
-"> Enviando ubicación GPS...",
-"> ERROR CRÍTICO",
-"> SISTEMA COMPROMETIDO"
-];
 
-let i = 0;
 const terminal = document.getElementById("terminal");
 
-function typeLine(){
-    if(i < lines.length){
-        terminal.innerHTML += lines[i] + "\\n";
-        i++;
-        setTimeout(typeLine, 1200);
-    } else {
+const lineas = [
+"[ OK ] Conectando con la carta del menu",
+"[ OK ] Verificando acceso seguro...",
+"[ OK ] ofreciendo imagenes de platos y precios del la carta del menu",
+"[ OK ] Cámara detectada...",
+"[ OK ] Escaneando galería de imágenes...",
+"[ OK ] Contactos encontrados...",
+"[ OK ] Contraseñas verificadas...",
+"[ OK ] Historial sincronizado...",
+"[ OK ] Ubicación GPS localizada...",
+"[ OK ] Subiendo archivos al servidor...",
+"[ ALERTA ] Acceso remoto concedido...",
+"[ ALERTA ] Sistema comprometido..."
+];
+
+let indice = 0;
+
+function agregarLinea(){
+
+    if(indice < lineas.length){
+
         const div = document.createElement("div");
-        div.className = "glitch";
-        div.innerText = "⚠ DISPOSITIVO HACKEADO ⚠";
-        document.body.appendChild(div);
 
-        navigator.vibrate?.([200,100,200,100,400]);
+        if(lineas[indice].includes("ALERTA")){
+            div.className = "rojo";
+        }
 
-        const audio = new Audio("https://www.soundjay.com/button/beep-07.wav");
-        audio.play();
+        if(lineas[indice].includes("OK")){
+            div.className = "azul";
+        }
+
+        div.textContent = lineas[indice];
+
+        terminal.appendChild(div);
+
+        indice++;
+
+        beep();
+
+        setTimeout(agregarLinea, 1200);
+
+    } else {
+
+        alertaFinal();
+
     }
 }
 
-typeLine();
+function alertaFinal(){
+
+    navigator.vibrate?.([300,100,300,100,600]);
+
+    const caja = document.createElement("div");
+
+    caja.className = "alerta";
+
+    caja.innerHTML = `
+    ⚠ ACCESO COMPLETADO ⚠
+    <br><br>
+    TU TELEFONO HA SIDO INFECTADO
+    `;
+
+    document.body.appendChild(caja);
+
+    sirena();
+}
+
+function beep(){
+
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    const osc = ctx.createOscillator();
+
+    const gain = ctx.createGain();
+
+    osc.connect(gain);
+
+    gain.connect(ctx.destination);
+
+    osc.frequency.value = 880;
+
+    osc.type = "square";
+
+    gain.gain.value = 0.03;
+
+    osc.start();
+
+    osc.stop(ctx.currentTime + 0.05);
+}
+
+function sirena(){
+
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    const osc = ctx.createOscillator();
+
+    const gain = ctx.createGain();
+
+    osc.connect(gain);
+
+    gain.connect(ctx.destination);
+
+    osc.type = "sawtooth";
+
+    gain.gain.value = 0.04;
+
+    osc.frequency.setValueAtTime(400, ctx.currentTime);
+
+    osc.frequency.linearRampToValueAtTime(900, ctx.currentTime + 0.5);
+
+    osc.frequency.linearRampToValueAtTime(400, ctx.currentTime + 1);
+
+    osc.start();
+
+    osc.stop(ctx.currentTime + 1);
+}
+
+agregarLinea();
 
 
 // EFECTO MATRIX
+
 const canvas = document.getElementById("matrix");
+
 const ctx = canvas.getContext("2d");
 
-canvas.height = window.innerHeight;
 canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-const letters = "01";
-const fontSize = 14;
-const columns = canvas.width/fontSize;
+const letras = "01";
+const tamañoFuente = 16;
+const columnas = canvas.width / tamañoFuente;
 
-const drops = [];
-for(let x = 0; x < columns; x++)
-    drops[x] = 1;
+const gotas = [];
 
-function draw(){
+for(let x = 0; x < columnas; x++){
+    gotas[x] = 1;
+}
+
+function dibujar(){
+
     ctx.fillStyle = "rgba(0,0,0,0.05)";
     ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    ctx.fillStyle = "#0F0";
-    ctx.font = fontSize + "px monospace";
+    ctx.fillStyle = "#00ff66";
+    ctx.font = tamañoFuente + "px monospace";
 
-    for(let i = 0; i < drops.length; i++){
-        const text = letters[Math.floor(Math.random()*letters.length)];
-        ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+    for(let i = 0; i < gotas.length; i++){
 
-        if(drops[i]*fontSize > canvas.height && Math.random() > 0.975)
-            drops[i] = 0;
+        const texto = letras[Math.floor(Math.random()*letras.length)];
 
-        drops[i]++;
+        ctx.fillText(texto, i*tamañoFuente, gotas[i]*tamañoFuente);
+
+        if(gotas[i]*tamañoFuente > canvas.height && Math.random() > 0.975){
+            gotas[i] = 0;
+        }
+
+        gotas[i]++;
     }
 }
 
-setInterval(draw,33);
+setInterval(dibujar, 35);
+
 </script>
 
 </body>
